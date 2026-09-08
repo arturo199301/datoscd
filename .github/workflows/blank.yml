@@ -1,36 +1,43 @@
-# This is a basic workflow to help you get started with Actions
+name: Ejecutor de Web Diario
 
-name: CI
-
-# Controls when the workflow will run
+# 1. CUÁNDO SE EJECUTA
 on:
-  # Triggers the workflow on push or pull request events but only for the "main" branch
-  push:
-    branches: [ "main" ]
-  pull_request:
-    branches: [ "main" ]
+  schedule:
+    - cron: '0 05 * * *'  # Se ejecuta automáticamente todos los días a las 5:00 AM
+  workflow_dispatch:      # Permite activar el script manualmente con un botón
 
-  # Allows you to run this workflow manually from the Actions tab
-  workflow_dispatch:
-
-# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+# 2. QUÉ HACE LA MÁQUINA VIRTUAL
 jobs:
-  # This workflow contains a single job called "build"
-  build:
-    # The type of runner that the job will run on
-    runs-on: ubuntu-latest
+  job_scraping:
+    runs-on: ubuntu-latest  # Usa un servidor Linux gratuito
 
-    # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
-      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
-      - uses: actions/checkout@v4
+      # Paso A: Descargar nuestro código del repositorio
+      - name: Descargar repositorio
+        uses: actions/checkout@v4
 
-      # Runs a single command using the runners shell
-      - name: Run a one-line script
-        run: echo Hello, world!
+      # Paso B: Instalar Python en la máquina virtual
+      - name: Configurar Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
 
-      # Runs a set of commands using the runners shell
-      - name: Run a multi-line script
+      # Paso C: Instalar las librerías necesarias
+      # Las librerías deben coincidir con nuestro Colab
+      - name: Instalar librerías
         run: |
-          echo Add other actions to build,
-          echo test, and deploy your project.
+          python -m pip install --upgrade pip
+          pip install requests beautifulsoup4 pandas
+
+      # Paso D: Ejecutar nuestro script de Python
+      - name: Ejecutar script de Web 
+        run: python texto.py
+
+      # Paso E: Guardar y subir el archivo CSV generado al repositorio
+      - name: Guardar cambios en GitHub
+        run: |
+          git config --global user.name 'github-actions[bot]'
+          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+          git add -A
+          git commit -m "Actualización automática del CSV por GitHub Actions" || exit 0
+          git push
