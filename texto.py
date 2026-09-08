@@ -5,10 +5,6 @@ import re
 
 # 1. Hacer la petición a uDiscover Store México
 url = "https://udiscover.mx/collections/cd"
-headers = {
-    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36'
-}
-
 response = requests.get(url, headers=headers)
 response.encoding = 'utf-8'
 
