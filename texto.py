@@ -1,34 +1,46 @@
 import requests
 from bs4 import BeautifulSoup
 import pandas as pd
+import re
 
-# Script completo adaptado para uDiscover Store México
+# 1. Hacer la petición a la página objetivo con User-Agent
 url = "https://udiscover.mx/collections/cd"
+headers = {
+    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36'
+}
+
 response = requests.get(url, headers=headers)
 response.encoding = 'utf-8'
 
+# 2. Convertir HTML con BeautifulSoup
 soup = BeautifulSoup(response.text, "html.parser")
-productos = soup.find_all("div", class_=lambda c: c and ("product" in c.lower() or "grid__item" in c.lower()))
+
+# 3. Localizar las tarjetas de productos
+productos = soup.find_all("li", class_=lambda c: c and "grid__item" in c) or soup.find_all("div", class_=lambda c: c and "product" in c.lower())
 
 datos = []
+
+# 4. Extraer y limpiar títulos y precios
 for prod in productos:
-    titulo_elem = prod.find(["a", "h3", "h2"], class_=lambda c: c and ("title" in c.lower() or "heading" in c.lower()))
-    precio_elem = prod.find(["span", "p", "div"], class_=lambda c: c and "price" in c.lower())
-
-    if titulo_elem and precio_elem:
+    titulo_elem = prod.find("a", class_=lambda c: c and "link" in c.lower()) or prod.find(["h2", "h3", "a"])
+    precio_elem = prod.find("span", class_=lambda c: c and "price" in c.lower())
+    
+    if titulo_elem:
         titulo = titulo_elem.text.strip()
-        precio_raw = precio_elem.text.strip()
-        precio = float(precio_raw.replace("$", "").replace(",", "").replace("MXN", "").strip() or 0)
+        precio_raw = precio_elem.text.strip() if precio_elem else "$0"
+        
+        # Extracción numérica del precio
+        match_precio = re.search(r'[\d,]+(\.\d+)?', precio_raw.replace('$', '').replace('MXN', ''))
+        precio_limpio = float(match_precio.group(0).replace(',', '')) if match_precio else 0.0
+        
+        if titulo:
+            datos.append({
+                "titulo": titulo,
+                "precio_mxn": precio_limpio,
+                "disponibilidad": "En existencia"
+            })
 
-        datos.append({
-            "titulo": titulo,
-            "precio_mxn": precio,
-            "disponibilidad": "En existencia"
-        })
-
+# 5. Exportar los datos recolectados a CSV
 df = pd.DataFrame(datos)
 df.to_csv("catalogo_udiscover_cd.csv", index=False, encoding="utf-8-sig")
-print("Scraping exitoso y archivo catalogo_udiscover_cd.csv creado.")
-
-with open("texto.py", "w", encoding="utf-8") as f:
-    f.write(script_code)
+print(f"Scraping exitoso. Se extrajeron {len(df)} registros y se guardaron en 'catalogo_udiscover_cd.csv'")
