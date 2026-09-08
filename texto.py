@@ -1,11 +1,9 @@
-%%writefile texto.py
 import requests
 from bs4 import BeautifulSoup
 import pandas as pd
 
 # Script completo adaptado para uDiscover Store México
 url = "https://udiscover.mx/collections/cd"
-headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'}
 response = requests.get(url, headers=headers)
 response.encoding = 'utf-8'
 
@@ -31,3 +29,6 @@ for prod in productos:
 df = pd.DataFrame(datos)
 df.to_csv("catalogo_udiscover_cd.csv", index=False, encoding="utf-8-sig")
 print("Scraping exitoso y archivo catalogo_udiscover_cd.csv creado.")
+
+with open("scraper.py", "w", encoding="utf-8") as f:
+    f.write(script_code)
