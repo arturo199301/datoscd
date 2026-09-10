@@ -1,16 +1,12 @@
-import requests
+mport requests
 from bs4 import BeautifulSoup
 import pandas as pd
 
 url = "https://udiscover.mx/collections/cd"
 headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"}
 
-response = requests.get(url, headers=headers)
-response.encoding = 'utf-8'
-soup = BeautifulSoup(response.text, "html.parser")
-
-# Método alternativo directo para e-commerce Shopify (JSON de productos si está presente)
-res_json = requests.get("https://udiscover.mx/collections/cd/products.json")
+# Método directo para e-commerce Shopify
+res_json = requests.get("https://udiscover.mx/collections/cd/products.json", headers=headers)
 datos = []
 
 if res_json.status_code == 200:
@@ -18,10 +14,9 @@ if res_json.status_code == 200:
     for item in items:
         precio = item.get("variants", [{}])[0].get("price", "N/A")
         datos.append({
-            "titulo": item.get("title"),
-            "artista_vendor": item.get("vendor"),
-            "precio_mxn": f"${precio}",
-            "enlace": f"https://udiscover.mx/products/{item.get('handle')}"
+            "producto": item.get("title"),
+            "artista": item.get("vendor"),
+            "precio_mxn": f"${precio}"
         })
 
 df = pd.DataFrame(datos)
